@@ -6,10 +6,8 @@ import base64
 from urlparse import urlparse
 import json
 from CMOUtilities import *
+from OTHER_CONSTANTS import * 
 
-###TEMP
-username = 'bicboss'
-password = 'deepestbluestsharksfin'
 
 def getServiceResults(service_url):
 
