@@ -30,11 +30,13 @@ def updateLims(proj_id, redaction_file, analyst, service_user, testing):
     lims_proj_id=proj_id
     if not proj_id.startswith("0"):
         lims_proj_id="0" + proj_id
-    lims_proj_id=re.sub('_p[0-9]$','',lim_proj)
+    lims_proj_id=re.sub('_p[0-9]$','',lims_proj_id)
     if proj_id.endswith("_Zp"):
-        lims_proj_id=re.sub('_Zp$', '', proj_id)
+        lims_proj_id=re.sub('_Zp$', '', lims_proj_id)
 
     proj_samples_and_runs = lims_rest.getRunsPerSample(lims_proj_id, service_user)
+
+
     if not proj_samples_and_runs:
         results.append("LIMS_ERROR: Could not find samples and runs for project " + lims_proj_id + " in LIMS. QC status for redacted samples have NOT been updated.")
         return results
@@ -133,6 +135,7 @@ def redactSamples(args):
             cmoproj.sendEmail(recipients=[cmoproj.projManagerEmails[cmoproj.projManager]],subject=subj,body=successEmailText)
         else:
             cmoproj.sendEmail(subject=subj,body=successEmailText)
+
         print "Sample redaction request was successful."
         print "\n"
         print "BIC has been notified and will submit to cBio portal ASAP."
