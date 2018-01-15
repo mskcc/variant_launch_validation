@@ -87,11 +87,15 @@ class CMOProject():
 
         self.projManagerEmails = {'Caitlin Bourque': 'bourquec@mskcc.org', \
                                   'Bourque, Caitlin': 'bourquec@mskcc.org', \
+                                  'Ling, Lilan'  : 'lingl@mskcc.org', \
+                                  'Lilan Ling' : 'lingl@mskcc.org', \
                                   'Duygu Selcuklu': 'selcukls@mskcc.org', \
                                   'Ravichandran, Krithika': 'ravichak@mskcc.org', \
                                   'Krithika Ravichandran': 'ravichak@mskcc.org', \
                                   'Vanness, Katelynd': 'vannessk@mskcc.org', \
                                   'Katelynd Vanness': 'vannessk@mskcc.org', \
+                                  'Pavitra Rao' : 'raop@mskcc.org', \
+                                  'Rao, Pavitra' : 'raop@mskcc.org', \
                                   'Selcuklu, S. Duygu': 'selcukls@mskcc.org', \
                                   'Selcuklu, Duygu': 'selcukls@mskcc.org', \
                                   'Caitlin Jones': 'byrnec@mskcc.org', \
