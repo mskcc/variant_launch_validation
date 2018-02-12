@@ -1512,6 +1512,10 @@ class SampleInfo():
         return False
 
 
+def duplicateCmoId(cmoId, cmoIds):
+    return cmoId in cmoIds
+
+
 class SampleMap():
     def __init__(self, sampleInfo, projID, piEmail, pipelineRunDir, exome, relabels):
         print>> sys.stderr, datetime.fromtimestamp(time.time()).strftime(
@@ -1537,6 +1541,7 @@ class SampleMap():
 
         self.cmoIdToCorrected = {}
         self.correctedToCmoId = {}
+        self.userIdToCorrectedCmoId = {}
 
         self.initCmoToCorrectedSampleIdMappings()
         self.makeMap()
@@ -1783,9 +1788,13 @@ class SampleMap():
         runID_Abbrev = runID[:runID.find("_") + 5]
 
         if sampleName not in self.sampleInfo.sampleRecs:
+            print>> sys.stderr, datetime.fromtimestamp(time.time()).strftime(
+                '%Y-%m-%d %H:%M:%S'), "\tSampleName " + sampleName + " not in sampleRecs"
             return False
 
         if runID_Abbrev in self.sampleInfo.sampleRecs[sampleName].EXCLUDE_RUN_ID:
+            print>> sys.stderr, datetime.fromtimestamp(time.time()).strftime(
+                '%Y-%m-%d %H:%M:%S'), "Run id " + runID_Abbrev + " is in exclude run for sample " + sampleName
             return False
         if runID_Abbrev not in self.sampleInfo.sampleRecs[sampleName].INCLUDE_RUN_ID:
             self.errors.append("".join(["ERROR: Run ID ", runID_Abbrev, " is not in the include " \
@@ -1992,6 +2001,7 @@ class SampleMap():
 
             self.cmoIdToCorrected[passedSample["cmoId"]] = correctedCmoId
             self.correctedToCmoId[correctedCmoId] = passedSample["cmoId"]
+            self.userIdToCorrectedCmoId[passedSample["userId"]] = passedSample["correctedCmoId"]
 
     def isDmpSample(self, sample):
         return sample.INCLUDE_RUN_ID == "DMPLibs"
@@ -2024,17 +2034,36 @@ class SampleMap():
             PoolInfo = namedtuple("PInfo", "poolName path poolType chosen")
             poolNormRunIDset = set()
 
+
+            cmoIds = []
             for dir in sampleDirs:
                 print >>sys.stderr,"sample dir: " + dir
                 cmoId, runID = self.getCmoId(dir)
+
                 correctedCmoId = cmoId
                 if not cmoId in self.sampleInfo.normalPoolRecs:
                     if self.limsProject:
-                        if not cmoId in self.cmoIdToCorrected:
-                           continue
+                        print>> sys.stderr, datetime.fromtimestamp(time.time()).strftime(
+                            '%Y-%m-%d %H:%M:%S'), "\tLIMS project"
 
-                        correctedCmoId = self.cmoIdToCorrected[cmoId]
+                        if not cmoId in self.cmoIdToCorrected:
+                           print>> sys.stderr, datetime.fromtimestamp(time.time()).strftime(
+                                '%Y-%m-%d %H:%M:%S'), "\tcmoId: " + cmoId + " not in cmoIdToCorrectedMap"
+                           cmoIds.append(cmoId)
+                           continueq
+                        else:
+                            if (duplicateCmoId(cmoId, cmoIds)):
+                                print>> sys.stderr, datetime.fromtimestamp(time.time()).strftime(
+                                    '%Y-%m-%d %H:%M:%S'), "\tDuplicate CMO Sample id found: '" + cmoId + "'. Mapping corrected cmo id from investigator sample id: " + \
+                                                          self.userIdToCorrectedCmoId[cmoId]
+                                correctedCmoId = relabelSampleNames(self.userIdToCorrectedCmoId[cmoId], self.relabels)
+                            else:
+                                correctedCmoId = self.cmoIdToCorrected[cmoId]
+
+                        cmoIds.append(cmoId)
                     else:
+                        print>> sys.stderr, datetime.fromtimestamp(time.time()).strftime(
+                            '%Y-%m-%d %H:%M:%S'), "\tNOT LIMS project"
                         if runID == "DMPLibs" and cmoId in self.relabels:
                             correctedCmoId = self.relabels[cmoId]
                         if runID == "DMPLibs" and cmoId.replace("-","_") in self.relabels:
@@ -2043,10 +2072,16 @@ class SampleMap():
                              realProj  = dir.rstrip("/").split("/")[-2].replace("Project_", "").replace("Proj_", "")
                              if(len(realProj.split("_")[0]) == 4):
                                 realProj = '0' + realProj
+
+                             print>> sys.stderr, datetime.fromtimestamp(time.time()).strftime(
+                                    '%Y-%m-%d %H:%M:%S'), "Real project" + realProj
                              passedSamples = lims_rest.getPassedSamples(realProj, "BICValidator")
+
                              for passedSample in passedSamples["samples"]:
                                  if passedSample["cmoId"] == cmoId:
                                     correctedCmoId = passedSample["correctedCmoId"].replace("-","_")
+                                    print>> sys.stderr, datetime.fromtimestamp(time.time()).strftime(
+                                        '%Y-%m-%d %H:%M:%S'), "\tcorrected cmo id: " + correctedCmoId + " for cmoid: " + cmoId
 
                     if not self.isValidRunID(runID):
                         print>> sys.stderr, "runID", runID, "invalid!!!"
@@ -2154,6 +2189,8 @@ class SamplePairing():
         if not os.path.isfile(self.pairingFile):
             self.errors.append("ERROR: Pairing file does not exist or is not a valid file. ")
             return
+        print>> sys.stderr, datetime.fromtimestamp(time.time()).strftime(
+            '%Y-%m-%d %H:%M:%S'), "sample recs: " + ', '.join(str(p) for p in sampleRecs.keys())
 
         for rec in lib.xlsx.DictReader(self.pairingFile, sheetName="PairingInfo"):
             self.verifyPairingInfoHeaders(rec._MetaStruct__fields)
