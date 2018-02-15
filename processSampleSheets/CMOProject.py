@@ -2050,7 +2050,7 @@ class SampleMap():
                            print>> sys.stderr, datetime.fromtimestamp(time.time()).strftime(
                                 '%Y-%m-%d %H:%M:%S'), "\tcmoId: " + cmoId + " not in cmoIdToCorrectedMap"
                            cmoIds.append(cmoId)
-                           continueq
+                           continue
                         else:
                             if (duplicateCmoId(cmoId, cmoIds)):
                                 print>> sys.stderr, datetime.fromtimestamp(time.time()).strftime(
