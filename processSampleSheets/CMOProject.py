@@ -2079,9 +2079,17 @@ class SampleMap():
 
                              for passedSample in passedSamples["samples"]:
                                  if passedSample["cmoId"] == cmoId:
-                                    correctedCmoId = passedSample["correctedCmoId"].replace("-","_")
-                                    print>> sys.stderr, datetime.fromtimestamp(time.time()).strftime(
+                                     if (duplicateCmoId(cmoId, cmoIds)):
+                                         print>> sys.stderr, datetime.fromtimestamp(time.time()).strftime(
+                                             '%Y-%m-%d %H:%M:%S'), "\tDuplicate CMO Sample id found: '" + cmoId + "'. Mapping corrected cmo id from investigator sample id: " + \
+                                                                   self.userIdToCorrectedCmoId[cmoId]
+                                         correctedCmoId = relabelSampleNames(self.userIdToCorrectedCmoId[cmoId], self.relabels)
+                                     else:
+                                         correctedCmoId = passedSample["correctedCmoId"].replace("-","_")
+
+                                     print>> sys.stderr, datetime.fromtimestamp(time.time()).strftime(
                                         '%Y-%m-%d %H:%M:%S'), "\tcorrected cmo id: " + correctedCmoId + " for cmoid: " + cmoId
+                        cmoIds.append(cmoId)
 
                     if not self.isValidRunID(runID):
                         print>> sys.stderr, "runID", runID, "invalid!!!"
